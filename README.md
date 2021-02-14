@@ -16,120 +16,104 @@ A CodeIgniter4 library for building a Datatables server side processing SQL quer
 - jQuery 3.5.1+
 - Datatables 1.10.23+
 ## Installation
-Download **Datatables_server_side.php** and add it to your *application/libraries* directory.
-## Usage
-### Initialize library
-From within any of your Controller methods, initialize library using the CodeIgniter's standard way. You **MUST** pass data as an array via the second parameter and it will be passed to the library's constructor:
-```
-$this->load->library('datatables_server_side', array(
-	'table' => 'customer', //name of the table to fetch data from
-	'primary_key' => 'customer_id', //primary key field name
-	'columns' => array('first_name', 'last_name', 'email'), //zero-based array of field names. 
-	'where' => array() //associative array or custom where string
-));
-```
-### Access the library
-Once the library is loaded, you need to call the following method:
-```
-$this->datatables_server_side->process();
-``` 
-The method accepts two parameters which are both optional. These parameters are used to add / modify *tr* tag.
-
-**row_id (String)**
-
-*Possible values: 'id', 'data', 'none'*
-
-*Examples*
-```
-$this->datatables_server_side->process('id');
-//<tr id="10" role="row" class="odd">
-``` 
-```
-$this->datatables_server_side->process('data'); //Default
-//<tr data-id="10" role="row" class="odd">
-``` 
-```
-$this->datatables_server_side->process('none');
-//<tr role="row" class="odd">
-``` 
-***row_class (String)***
-
-*Possible values: '', 'class_name'*
-
-*Examples* 
-```
-$this->datatables_server_side->process('none', ''); //Default
-//<tr role="row" class="odd">
-``` 
-```
-$this->datatables_server_side->process('none', 'class_name');
-//<tr role="row" class="class_name odd">
-``` 
-## Sample
+Copy the following two files to your application: **app/Helpers/formatter_helper.php** & **app/Libraries/DataTable.php**
+## Sample usage
 The following sample uses sakila dump downloaded from (https://dev.mysql.com/doc/index-other.html). You can also clone this repository and run it on your local machine to see an end to end working example.
-### Controller
+### Model
 ```
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Welcome extends CI_Controller {
+namespace App\Models;
 
-	public function index()
-	{
-		$this->load->helper('url');
-		$this->load->view('home');
-	}
+use CodeIgniter\Model;
 
-	public function load_data()
-	{
-		$this->load->library('datatables_server_side', array(
-			'table' => 'customer',
-			'primary_key' => 'customer_id',
-			'columns' => array('first_name', 'last_name', 'email'),
-			'where' => array()
-		));
-
-		$this->datatables_server_side->process();
-	}
+class CustomerModel extends Model
+{
+    protected $table = 'customer';
+    protected $primaryKey = 'customer_id';
 }
 ```
 ### View
 ```
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
-	<title>Server-side processing</title>
-
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.23/css/jquery.dataTables.css">
+	<title>CodeIgniter4 DataTables</title>
 </head>
 <body>
-	<table id="users">
+	<table id="myTable" class="display">
 		<thead>
 			<tr>
 				<th>First name</th>
 				<th>Last name</th>
-				<th>Email</th>
+				<th>Email address</th>
+				<th>Status</th>
+				<th>Action</th>
 			</tr>
 		</thead>
 	</table>
-
-	<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.23/js/jquery.dataTables.js"></script>
 	<script type="text/javascript">
-		$(document).ready(function() {
-			$('#users').dataTable({
-				serverSide: true,
-				ajax: '<?php echo base_url('welcome/load_data'); ?>'
+		$(document).ready( function () {
+			$('#myTable').DataTable({
+	            processing: true,
+	            serverSide: true,
+	            ajax: 'http://localhost:8080/home/getcustomers'
 			});
-		});
+		} );
 	</script>
 </body>
 </html>
 ```
+### Controller
+```
+<?php
+
+namespace App\Controllers;
+
+use App\Libraries\DataTable;
+use CodeIgniter\API\ResponseTrait;
+
+class Home extends BaseController
+{
+	use ResponseTrait;
+
+	public function index()
+	{
+		return view('home');
+	}
+
+	public function getCustomers()
+	{
+		$dataTable = new DataTable();
+		$response = $dataTable->process('CustomerModel', [
+			[
+				'name' => 'first_name'
+			],
+			[
+				'name' => 'last_name'
+			],
+			[
+				'name' => 'email'
+			],
+			[
+				'name' => 'active',
+				'formatter' => 'set_status'
+			],
+			[
+				'name' => 'customer_id',
+				'formatter' => 'action_links'
+			]
+		]);
+		
+		return $this->setResponseFormat('json')->respond($response);
+	}
+}
+```
 ### Output
-![Sample](/assets/img/sample.png)
-## Known issues
+![Sample](/public/assets/images/sample.png)
+## Notes
 * Only zero-based column labelling is currently supported: 0 -> first column, 1 -> second column, etc.
-* No data processors / formatters. All data processing / formatting must be done at the front end.
+* Data processors / formatters must be defined in formatter helper file. Example functions have been defined.
