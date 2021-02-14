@@ -1,16 +1,20 @@
-# DataTables server-side processing for CodeIgniter.
+# DataTables server-side processing for CodeIgniter4.
 ## What is it?
-A CodeIgniter library for building a Datatables server side processing SQL query.
+A CodeIgniter4 library for building a Datatables server side processing SQL query.
 
 **Links**
 
 [CodeIgniter](https://codeigniter.com/)
 
+[jQuery](https://jquery.com/)
+
 [DataTables](https://datatables.net/)
 ## Requirements
-- PHP Version 7.3.10 or greater
-- CodeIgniter 3.1.11+
-- Datatables 1.10.20+
+- PHP Version 7.3 or newer
+- MySQL 5.1+
+- CodeIgniter 4.1.1+
+- jQuery 3.5.1+
+- Datatables 1.10.23+
 ## Installation
 Download **Datatables_server_side.php** and add it to your *application/libraries* directory.
 ## Usage
