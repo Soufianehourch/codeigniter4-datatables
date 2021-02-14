@@ -9,6 +9,12 @@ A CodeIgniter4 library for building a Datatables server side processing SQL quer
 [jQuery](https://jquery.com/)
 
 [DataTables](https://datatables.net/)
+## Features
+The library can perform the following from the server side.
+- Fetching data
+- Searching / Filtering
+- Ordering
+- Data processing / formatting
 ## Requirements
 - PHP Version 7.3 or newer
 - MySQL 5.1+
