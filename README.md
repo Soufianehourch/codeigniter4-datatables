@@ -1,63 +1,131 @@
-# CodeIgniter 4 Application Starter
+# DataTables server-side processing for CodeIgniter.
+## What is it?
+A CodeIgniter library for building a Datatables server side processing SQL query.
 
-## What is CodeIgniter?
+**Links**
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](http://codeigniter.com).
+[CodeIgniter](https://codeigniter.com/)
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+[DataTables](https://datatables.net/)
+## Requirements
+- PHP Version 7.3.10 or greater
+- CodeIgniter 3.1.11+
+- Datatables 1.10.20+
+## Installation
+Download **Datatables_server_side.php** and add it to your *application/libraries* directory.
+## Usage
+### Initialize library
+From within any of your Controller methods, initialize library using the CodeIgniter's standard way. You **MUST** pass data as an array via the second parameter and it will be passed to the library's constructor:
+```
+$this->load->library('datatables_server_side', array(
+	'table' => 'customer', //name of the table to fetch data from
+	'primary_key' => 'customer_id', //primary key field name
+	'columns' => array('first_name', 'last_name', 'email'), //zero-based array of field names. 
+	'where' => array() //associative array or custom where string
+));
+```
+### Access the library
+Once the library is loaded, you need to call the following method:
+```
+$this->datatables_server_side->process();
+``` 
+The method accepts two parameters which are both optional. These parameters are used to add / modify *tr* tag.
 
-More information about the plans for version 4 can be found in [the announcement](http://forum.codeigniter.com/thread-62615.html) on the forums.
+**row_id (String)**
 
-The user guide corresponding to this version of the framework can be found
-[here](https://codeigniter4.github.io/userguide/).
+*Possible values: 'id', 'data', 'none'*
 
-## Installation & updates
+*Examples*
+```
+$this->datatables_server_side->process('id');
+//<tr id="10" role="row" class="odd">
+``` 
+```
+$this->datatables_server_side->process('data'); //Default
+//<tr data-id="10" role="row" class="odd">
+``` 
+```
+$this->datatables_server_side->process('none');
+//<tr role="row" class="odd">
+``` 
+***row_class (String)***
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+*Possible values: '', 'class_name'*
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+*Examples* 
+```
+$this->datatables_server_side->process('none', ''); //Default
+//<tr role="row" class="odd">
+``` 
+```
+$this->datatables_server_side->process('none', 'class_name');
+//<tr role="row" class="class_name odd">
+``` 
+## Sample
+The following sample uses sakila dump downloaded from (https://dev.mysql.com/doc/index-other.html). You can also clone this repository and run it on your local machine to see an end to end working example.
+### Controller
+```
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-## Setup
+class Welcome extends CI_Controller {
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+	public function index()
+	{
+		$this->load->helper('url');
+		$this->load->view('home');
+	}
 
-## Important Change with index.php
+	public function load_data()
+	{
+		$this->load->library('datatables_server_side', array(
+			'table' => 'customer',
+			'primary_key' => 'customer_id',
+			'columns' => array('first_name', 'last_name', 'email'),
+			'where' => array()
+		));
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+		$this->datatables_server_side->process();
+	}
+}
+```
+### View
+```
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+?><!DOCTYPE html>
+<html>
+<head>
+	<title>Server-side processing</title>
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+</head>
+<body>
+	<table id="users">
+		<thead>
+			<tr>
+				<th>First name</th>
+				<th>Last name</th>
+				<th>Email</th>
+			</tr>
+		</thead>
+	</table>
 
-**Please** read the user guide for a better explanation of how CI4 works!
-
-## Repository Management
-
-We use Github issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
-
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
-
-## Server Requirements
-
-PHP version 7.3 or higher is required, with the following extensions installed:
-
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php)
-- xml (enabled by default - don't turn it off)
+	<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$('#users').dataTable({
+				serverSide: true,
+				ajax: '<?php echo base_url('welcome/load_data'); ?>'
+			});
+		});
+	</script>
+</body>
+</html>
+```
+### Output
+![Sample](/assets/img/sample.png)
+## Known issues
+* Only zero-based column labelling is currently supported: 0 -> first column, 1 -> second column, etc.
+* No data processors / formatters. All data processing / formatting must be done at the front end.
