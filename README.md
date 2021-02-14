@@ -94,6 +94,9 @@ class Home extends BaseController
 	public function getCustomers()
 	{
 		$dataTable = new DataTable();
+		
+		// process($modelClass, $columns, $where = [])
+		
 		$response = $dataTable->process('CustomerModel', [
 			[
 				'name' => 'first_name'
