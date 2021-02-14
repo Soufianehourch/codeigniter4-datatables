@@ -113,7 +113,7 @@ class Home extends BaseController
 }
 ```
 ### Output
-![Sample](/public/assets/images/sample.png)
+![Sample](/public/assets/images/sample.PNG)
 ## Notes
 * Only zero-based column labelling is currently supported: 0 -> first column, 1 -> second column, etc.
 * Data processors / formatters must be defined in formatter helper file. Example functions have been defined.
